@@ -21,6 +21,7 @@ enum ResponseEnum: int
     case CLIENT_PARAMETER_ERROR = 400001;
     case CLIENT_CREATED_ERROR = 400002;
     case CLIENT_DELETED_ERROR = 400003;
+    case CLIENT_FORBIDDEN = 400004;
 
     // 服务端操作错误码：500 ~ 599 开头，后拼接 3 位
     case SYSTEM_ERROR = 500001;

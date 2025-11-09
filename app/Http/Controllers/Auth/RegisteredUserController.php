@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\ResponseCodeEnum;
+use App\Enums\ResponseEnum;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +23,11 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
+        // 根据用户名查询用户是否已存在
+        $user = User::query()->where('name',$validated['name'])->first();
+        if ($user) {
+            return Response::fail('用户已存在', ResponseEnum::SERVICE_REGISTER_ERROR);
+        }
         // 借助 $fillable + password hashed casts 直接创建用户。
         $user = User::create([
             'name' => $validated['name'],
@@ -38,6 +43,6 @@ class RegisteredUserController extends Controller
         return Response::success([
             'token' => $token,
             'user' => $user,
-        ], '', ResponseCodeEnum::SERVICE_REGISTER_SUCCESS);
+        ], '', ResponseEnum::SERVICE_REGISTER_SUCCESS);
     }
 }

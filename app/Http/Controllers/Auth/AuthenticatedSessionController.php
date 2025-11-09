@@ -14,7 +14,6 @@ class AuthenticatedSessionController extends Controller
 {
     /**
      * 处理登录并返回访问令牌。
-     * @throws ValidationException
      */
     public function store(Request $request): JsonResponse
     {
@@ -24,16 +23,16 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::query()->where('email', $credentials['email'])->first();
 
         // 邮箱不存在或密码校验失败时统一返回约定格式。
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            return Response::fail(trans('auth.failed'), ResponseEnum::CLIENT_UNAUTHORIZED);
+            return Response::fail('邮箱或密码错误，请重新输入', ResponseEnum::SERVICE_LOGIN_ERROR);
         }
 
         // 后台可以禁用账号；此处额外校验 login_status 避免黑名单用户登录。
         if ($user->login_status !== 0) {
-            return Response::fail('该账号已被禁用，请联系管理员。', ResponseEnum::CLIENT_FORBIDDEN);
+            return Response::fail('该账号已被加入黑名单，请联系管理员解除限制', ResponseEnum::CLIENT_FORBIDDEN);
         }
 
         // 记录最后登录时间，可用于风控或后台展示。
@@ -47,7 +46,7 @@ class AuthenticatedSessionController extends Controller
         return Response::success([
             'token' => $token,
             'user' => $user,
-        ], '', ResponseCodeEnum::SERVICE_LOGIN_SUCCESS);
+        ], '', ResponseEnum::SERVICE_LOGIN_SUCCESS);
     }
 
     /**
@@ -64,6 +63,6 @@ class AuthenticatedSessionController extends Controller
             $token->delete();
         }
 
-        return Response::success([], '退出成功', ResponseCodeEnum::SERVICE_LOGIN_SUCCESS);
+        return Response::success([], '退出成功', ResponseEnum::SERVICE_LOGIN_SUCCESS);
     }
 }
